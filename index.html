@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Custom Values Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark"><img src="brand-mark.svg" alt="" /></div>
+          <div>Custom<br /><span>Values Manager</span></div>
+        </div>
+        <div class="profile-menu-wrap">
+          <button
+            class="profile-switcher"
+            id="profileSwitcher"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            aria-controls="profileMenu"
+          >
+            <span class="avatar">NH</span
+            ><span class="profile-label"
+              ><b id="profileName">Northstar Health</b
+              ><small id="profileRole">GHL subaccount</small></span
+            ><span class="chev"><img src="chevron-down.svg" alt="" /></span>
+          </button>
+          <div class="profile-menu" id="profileMenu" role="menu" hidden></div>
+        </div>
+        <nav>
+          <a class="active" href="#"><span>✦</span> Custom values</a>
+          <a href="#settings" id="connectionsNav"
+            ><span>+</span> Add new connection</a
+          >
+        </nav>
+        <div class="side-footer">
+          <span class="dot"></span> Secure local workspace
+        </div>
+      </aside>
+      <main>
+        <header>
+          <div>
+            <p class="eyebrow">GHL SUBACCOUNT</p>
+            <h1>Custom values</h1>
+          </div>
+          <div class="header-actions">
+            <button class="icon-btn" title="Refresh" id="refreshBtn">
+              <img src="reload.svg" alt="" /><span class="refresh-label"
+                >Reload</span
+              ></button
+            ><button class="connect-btn" id="openConnection">
+              <span><img src="gear.svg" alt="" /></span> Settings
+            </button>
+          </div>
+        </header>
+        <section class="workspace">
+          <section class="values-panel">
+            <div class="panel-head">
+              <div>
+                <h2>All values</h2>
+                <span id="valueCount">Demo workspace</span>
+              </div>
+              <button class="new-btn" id="newBtn">+ New value</button>
+            </div>
+            <label class="search"
+              ><span>⌕</span
+              ><input id="search" placeholder="Search custom values"
+            /></label>
+            <div class="values-list" id="valuesList"></div>
+          </section>
+          <section class="editor-panel">
+            <div class="editor-top">
+              <div>
+                <p class="eyebrow">EDITING CUSTOM VALUE</p>
+                <h2 id="editorName">Welcome message</h2>
+              </div>
+              <span class="status" id="editorStatus">● Draft</span>
+            </div>
+            <div class="key-row">
+              <span>KEY</span><code id="editorKey">welcome_message</code
+              ><button id="copyKey">Copy</button>
+            </div>
+            <div class="format-bar" id="formatBar">
+              <select id="blockFormat" title="Text style">
+                <option value="p">Paragraph</option>
+                <option value="h2">Heading</option>
+                <option value="h3">Subheading</option>
+                <option value="blockquote">Quote</option>
+              </select>
+              <i></i><button data-command="bold" title="Bold"><b>B</b></button
+              ><button data-command="italic" title="Italic"><em>I</em></button
+              ><button data-command="underline" title="Underline">
+                <u>U</u></button
+              ><i></i
+              ><button data-command="insertUnorderedList" title="Bulleted list">
+                ☷</button
+              ><button data-command="insertOrderedList" title="Numbered list">
+                ☰</button
+              ><button data-command="createLink" title="Add link">↗</button
+              ><i></i
+              ><button data-command="removeFormat" title="Clear formatting">
+                Tx
+              </button>
+            </div>
+            <div class="editor-wrap">
+              <div
+                id="editor"
+                class="editor"
+                contenteditable="true"
+                spellcheck="true"
+              ></div>
+              <div class="editor-foot">
+                <span id="wordCount">0 words</span><span>HTML enabled</span>
+              </div>
+            </div>
+            <details class="html-details">
+              <summary>View HTML source <span>⌄</span></summary>
+              <textarea id="htmlSource" spellcheck="false"></textarea>
+            </details>
+            <div class="save-row">
+              <span id="saveNote"
+                >Changes are saved to your selected GHL subaccount.</span
+              ><button class="save-btn" id="saveBtn">
+                Save custom value <span>→</span>
+              </button>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+    <dialog id="connectionDialog">
+      <form method="dialog" class="modal">
+        <div class="modal-title">
+          <div>
+            <p class="eyebrow">CONNECTION SETTINGS</p>
+            <h2>Connect a subaccount</h2>
+          </div>
+          <button class="close" value="cancel">×</button>
+        </div>
+        <p class="modal-copy">
+          Create a reusable connection for each GHL location. Tokens stay in
+          this browser and are only sent to GHL when you sync.
+        </p>
+        <label
+          >Connection name<input
+            id="connectionName"
+            placeholder="e.g. Northstar Health"
+        /></label>
+        <label
+          >Location ID<input id="locationId" placeholder="e.g. 3X2p..."
+        /></label>
+        <label
+          >Private integration token<input
+            id="token"
+            type="password"
+            placeholder="Paste token"
+        /></label>
+        <p class="hint">
+          Requires a GHL Private Integration token with Custom Values access.
+        </p>
+        <div class="modal-actions">
+          <button
+            class="delete-connection"
+            id="deleteConnection"
+            type="button"
+            hidden
+          >
+            <img src="trash-alt.svg" alt="" /> Delete</button
+          ><button class="cancel" value="cancel">Cancel</button
+          ><button class="save-connection" id="saveConnection" value="default">
+            Save connection
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="deleteDialog">
+      <form method="dialog" class="modal confirm-modal">
+        <div class="modal-title">
+          <div>
+            <p class="eyebrow">CONFIRM DELETION</p>
+            <h2>Delete connection?</h2>
+          </div>
+          <button class="close" value="cancel">×</button>
+        </div>
+        <p class="modal-copy">
+          You're about to remove
+          <b id="deleteConnectionName">this connection</b> from this browser.
+          The demo workspace will be loaded instead. This can't be undone.
+        </p>
+        <div class="modal-actions">
+          <button class="cancel" value="cancel">Cancel</button
+          ><button class="delete-confirm" id="confirmDelete" value="default">
+            Delete connection
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
