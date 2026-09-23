@@ -1,6 +1,11 @@
-# Custom Values Manager
+# GHL Custom Values Manager
 
 A compact internal editor for formatting HighLevel custom values as HTML.
+
+## Requirements
+
+- NodeJS LTS Version [https://nodejs.org/en/download](Download ⬇️)
+- Works on Chrome, Edge, Safari
 
 ## Run locally
 
@@ -25,7 +30,7 @@ The connection dialog needs two values: the **Location ID** and a **Private Inte
 
 1. Log into the GHL **sub-account** you want to connect.
 2. Click **Settings** (gear icon, bottom of the left sidebar).
-3. Open **Business Profile** (sometimes labelled *Company*).
+3. Open **Business Profile** (sometimes labelled _Company_).
 4. Under **General Information**, copy the **Location ID** field.
 
 Shortcut: the Location ID is also the segment in the browser URL — `https://app.gohighlevel.com/location/<LOCATION_ID>/...` — so you can copy it straight from the address bar.
@@ -40,7 +45,7 @@ Shortcut: the Location ID is also the segment in the browser URL — `https://ap
 4. Click **Create** and **copy the token immediately** — HighLevel shows it only once, and you can't reveal it again later.
 5. Paste the token into the **Private integration token** field of the connection dialog.
 
-Repeat these steps per sub-account; each connection is stored separately in the sidebar profile switcher. HighLevel recommends rotating tokens roughly every 90 days (Settings → Private Integrations → the integration → *Rotate and expire this token later*).
+Repeat these steps per sub-account; each connection is stored separately in the sidebar profile switcher. HighLevel recommends rotating tokens roughly every 90 days (Settings → Private Integrations → the integration → _Rotate and expire this token later_).
 
 ## Profiles
 
