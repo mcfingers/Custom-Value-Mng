@@ -4,7 +4,7 @@ A compact internal editor for formatting HighLevel custom values as HTML.
 
 ## Requirements
 
-- NodeJS LTS Version [https://nodejs.org/en/download](Download ⬇️)
+- NodeJS LTS Version | [Download ⬇️](https://nodejs.org/en/download)
 - Works on Chrome, Edge, Safari
 
 ## Run locally
