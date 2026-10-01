@@ -25,7 +25,7 @@ body {
   min-height: 100vh;
 }
 .sidebar {
-  width: 252px;
+  width: 300px;
   background: #202c27;
   color: #f7f8f3;
   padding: 30px 17px 22px;
@@ -91,11 +91,19 @@ body {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
   font-size: 11px;
 }
 .profile-label small {
   color: #a8b1ac;
   margin-top: 2px;
+}
+.profile-label b,
+.profile-label small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .chev {
   color: #c7cfca;
@@ -166,6 +174,8 @@ body {
   align-items: center;
   gap: 9px;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
   text-align: left;
   border: 0;
   background: transparent;
@@ -190,6 +200,7 @@ body {
 }
 .profile-option .check {
   margin-left: auto;
+  flex: none;
   color: #4c8038;
   opacity: 0;
   font-size: 13px;
