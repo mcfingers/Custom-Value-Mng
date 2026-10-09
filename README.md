@@ -21,6 +21,7 @@ Open `http://localhost:4173`.
 2. Click **Reload** in the header to load the location's custom values.
 3. Select a value, format it using the visual editor, or edit the generated HTML directly.
 4. Save to push the HTML back to GHL.
+5. With two or more connections saved, use **Copy between connections** in the sidebar to batch-copy values between subaccounts (see [Copy between connections](#copy-between-connections)).
 
 ## Getting your GHL credentials
 
@@ -50,6 +51,18 @@ Repeat these steps per sub-account; each connection is stored separately in the 
 ## Profiles
 
 The sidebar profile switcher is a dropdown of every saved connection. Open it to jump between subaccounts, pick the local **Demo workspace**, or add a new connection — the active profile is remembered across reloads.
+
+## Copy between connections
+
+Click **Copy between connections** in the sidebar to push values from one saved subaccount into another — useful when the same custom values exist across several client locations.
+
+1. Pick a **Source** and a **Target** connection (the active profile is prefilled as the source), then click **Load matches**.
+2. The dialog matches on the merge key (`fieldKey`): a value is only updated when that key **already exists in the target**. New custom values are never created — keys that exist in only one of the two connections are counted in the summary line but skipped.
+3. Review the matched pairs. Rows marked **identical** are locked (same value in both connections); rows marked **differs** come pre-checked and show the source and target values side by side.
+4. Narrow the list with **Search matches** (same name + key search as the main list) and use **Deselect all / Select all** to pick exactly what to copy. Selections survive filtering, and the button always shows how many values will be written.
+5. Click **Copy N values**. Values are written one at a time to the target; the result line reports how many succeeded and lists any failures with their key. If the target is the active profile, its list refreshes when the copy finishes.
+
+Requires at least two saved connections; the demo workspace can't be a source or target.
 
 ## Deleting a connection
 

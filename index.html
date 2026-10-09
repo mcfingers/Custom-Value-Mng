@@ -40,6 +40,7 @@
           <a href="#settings" id="connectionsNav"
             ><span>+</span> Add new connection</a
           >
+          <a href="#copy" id="copyNav"><span>⇄</span> Copy between connections</a>
         </nav>
         <div class="side-footer">
           <span class="dot"></span> Secure local workspace
@@ -199,6 +200,54 @@
           <button class="cancel" value="cancel">Cancel</button
           ><button class="delete-confirm" id="confirmDelete" value="default">
             Delete connection
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="copyDialog">
+      <form method="dialog" class="modal copy-modal">
+        <div class="modal-title">
+          <div>
+            <p class="eyebrow">BATCH COPY</p>
+            <h2>Copy custom values</h2>
+          </div>
+          <button class="close" value="cancel">×</button>
+        </div>
+        <p class="modal-copy">
+          Copy values from one subaccount into another. A value is only
+          updated when the same key already exists in the target — nothing
+          new is ever created there.
+        </p>
+        <div class="copy-connections" id="copyConnectionFields">
+          <label
+            >Source connection<select id="copySource"></select
+          ></label>
+          <label
+            >Target connection<select id="copyTarget"></select
+          ></label>
+        </div>
+        <p class="hint" id="copyHint" hidden>
+          Add at least two connections to copy between subaccounts.
+        </p>
+        <div class="copy-summary" id="copySummary" hidden></div>
+        <div class="copy-result" id="copyResult" hidden></div>
+        <div class="copy-list-head" id="copyListHead" hidden>
+          <label class="search copy-search"
+            ><span>⌕</span
+            ><input id="copySearch" placeholder="Search matches"
+          /></label>
+          <button class="copy-select-toggle" id="copySelectToggle" type="button">
+            Deselect all
+          </button>
+        </div>
+        <div class="copy-list" id="copyList" hidden></div>
+        <div class="modal-actions">
+          <button class="load-matches" id="loadMatches" type="button">
+            Load matches
+          </button>
+          <button class="cancel" id="copyCancel" type="button">Cancel</button
+          ><button class="save-connection" id="copyRun" type="button" hidden>
+            Copy values
           </button>
         </div>
       </form>

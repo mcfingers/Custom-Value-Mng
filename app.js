@@ -288,8 +288,8 @@ $("#saveConnection").onclick = (e) => {
   toast("Connection saved. Sync custom values when ready.");
 };
 
-async function ghl(method, endpoint, payload) {
-  const c = connections.find((x) => x.id === activeConnection);
+async function ghl(method, endpoint, payload, connectionId = activeConnection) {
+  const c = connections.find((x) => x.id === connectionId);
   if (!c) throw new Error("Add a GHL connection first.");
   const res = await fetch("/api/ghl/", {
     method: "POST",
@@ -309,19 +309,27 @@ async function ghl(method, endpoint, payload) {
   }
   return data;
 }
+async function fetchValuesFor(connectionId) {
+  const data = await ghl(
+    "GET",
+    "/locations/:locationId/customValues",
+    undefined,
+    connectionId,
+  );
+  const result = data.customValues || data.values || [];
+  return result.map((v) => ({
+    id: v.id,
+    name: v.name || v.fieldKey,
+    key: v.fieldKey,
+    value: v.value || "",
+  }));
+}
 async function loadValues() {
   if (!activeConnection) return;
   $("#refreshBtn").disabled = true;
   $(".refresh-label").textContent = "Loading…";
   try {
-    const data = await ghl("GET", "/locations/:locationId/customValues");
-    const result = data.customValues || data.values || [];
-    values = result.map((v) => ({
-      id: v.id,
-      name: v.name || v.fieldKey,
-      key: v.fieldKey,
-      value: v.value || "",
-    }));
+    values = await fetchValuesFor(activeConnection);
     if (!values.length) values = [];
     selected = values[0] || {
       id: null,
@@ -374,6 +382,242 @@ $("#saveBtn").onclick = async () => {
     $("#saveBtn").innerHTML = "Save custom value <span>→</span>";
   }
 };
+
+let copyPairs = [],
+  copyStats = null,
+  copyRunning = false;
+
+function fillConnectionSelect(select, selectedId) {
+  select.innerHTML = "";
+  connections.forEach((c) => {
+    const option = document.createElement("option");
+    option.value = c.id;
+    option.textContent = c.name;
+    select.appendChild(option);
+  });
+  if (connections.some((c) => c.id === selectedId)) select.value = selectedId;
+}
+function resetCopyResults() {
+  copyPairs = [];
+  copyStats = null;
+  $("#copySummary").hidden = true;
+  $("#copySummary").textContent = "";
+  $("#copyResult").hidden = true;
+  $("#copyResult").textContent = "";
+  $("#copySearch").value = "";
+  $("#copyListHead").hidden = true;
+  $("#copyList").hidden = true;
+  $("#copyList").innerHTML = "";
+  $("#copyRun").hidden = true;
+}
+function openCopyDialog() {
+  resetCopyResults();
+  const ready = connections.length >= 2;
+  $("#copyConnectionFields").hidden = !ready;
+  $("#copyHint").hidden = ready;
+  $("#loadMatches").hidden = !ready;
+  if (ready) {
+    const sourceId = connections.some((c) => c.id === activeConnection)
+      ? activeConnection
+      : connections[0].id;
+    const target = connections.find((c) => c.id !== sourceId);
+    fillConnectionSelect($("#copySource"), sourceId);
+    fillConnectionSelect($("#copyTarget"), target?.id);
+  }
+  $("#copyDialog").showModal();
+}
+function copyDifferCount() {
+  return copyPairs.filter((p) => !p.identical).length;
+}
+function checkedCopyCount() {
+  return copyPairs.filter((p) => p.checked && !p.identical).length;
+}
+function filteredCopyRows() {
+  const q = $("#copySearch").value.toLowerCase();
+  return copyPairs
+    .map((pair, index) => ({ pair, index }))
+    .filter(({ pair }) =>
+      `${pair.source.name} ${pair.source.key}`.toLowerCase().includes(q),
+    );
+}
+function updateCopyRunLabel() {
+  const n = checkedCopyCount();
+  $("#copyRun").textContent = `Copy ${n} value${n === 1 ? "" : "s"}`;
+  $("#copyRun").hidden = !copyDifferCount();
+  if (!copyRunning) $("#copyRun").disabled = n === 0;
+  const toggle = $("#copySelectToggle");
+  if (toggle) toggle.textContent = n ? "Deselect all" : "Select all";
+}
+function renderCopySummary() {
+  const s = copyStats;
+  $("#copySummary").textContent = `${s.matched} matched · ${s.differs} differ · ${s.identical} identical · ${s.onlySource} only in source · ${s.onlyTarget} only in target`;
+  $("#copySummary").hidden = false;
+}
+function renderCopyList() {
+  const rows = filteredCopyRows();
+  $("#copyList").innerHTML = !copyPairs.length
+    ? '<p class="copy-empty">No keys exist in both connections.</p>'
+    : rows.length
+      ? rows
+          .map(({ pair: p, index: i }) => {
+            const src = plain(p.source.value) || "(empty)";
+            const tgt = plain(p.target.value) || "(empty)";
+            return `<label class="copy-row">
+            <input type="checkbox" data-index="${i}" ${p.identical ? "disabled" : ""} ${!p.identical && p.checked ? "checked" : ""} />
+            <span class="copy-row-main">
+              <span class="copy-row-head"><b>${escapeHTML(p.source.name)}</b><code>${escapeHTML(p.source.key)}</code></span>
+              <span class="copy-previews">
+                <span class="copy-preview"><i>SOURCE</i>${escapeHTML(src)}</span>
+                <span class="copy-preview"><i>TARGET</i>${escapeHTML(tgt)}</span>
+              </span>
+            </span>
+            <span class="copy-badge ${p.identical ? "identical" : "differs"}">${p.identical ? "identical" : "differs"}</span>
+          </label>`;
+          })
+          .join("")
+      : '<p class="copy-empty">No matching values.</p>';
+  $("#copyList").hidden = false;
+  $("#copyListHead").hidden = !copyPairs.length;
+  $("#copyList").onchange = (e) => {
+    const box = e.target.closest('input[type="checkbox"]');
+    const pair = box && copyPairs[Number(box.dataset.index)];
+    if (pair) pair.checked = box.checked;
+    updateCopyRunLabel();
+  };
+  updateCopyRunLabel();
+}
+async function loadCopyMatches() {
+  const sourceId = $("#copySource").value;
+  const targetId = $("#copyTarget").value;
+  if (sourceId === targetId) return toast("Pick two different connections.");
+  $("#loadMatches").disabled = true;
+  $("#loadMatches").textContent = "Loading…";
+  $("#copyResult").hidden = true;
+  try {
+    const [sourceValues, targetValues] = await Promise.all([
+      fetchValuesFor(sourceId),
+      fetchValuesFor(targetId),
+    ]);
+    const targetByKey = new Map(targetValues.map((v) => [v.key, v]));
+    copyPairs = [];
+    const matchedTargetIds = new Set();
+    sourceValues.forEach((s) => {
+      const t = targetByKey.get(s.key);
+      if (!t) return;
+      matchedTargetIds.add(t.id);
+      copyPairs.push({
+        source: s,
+        target: t,
+        identical: s.value === t.value,
+        checked: s.value !== t.value,
+      });
+    });
+    copyStats = {
+      matched: copyPairs.length,
+      differs: copyDifferCount(),
+      identical: copyPairs.length - copyDifferCount(),
+      onlySource: sourceValues.length - copyPairs.length,
+      onlyTarget: targetValues.filter((v) => !matchedTargetIds.has(v.id))
+        .length,
+    };
+    renderCopySummary();
+    renderCopyList();
+  } catch (error) {
+    toast(`Couldn’t load values: ${error.message}`);
+  } finally {
+    $("#loadMatches").disabled = false;
+    $("#loadMatches").textContent = "Load matches";
+  }
+}
+function setCopyBusy(busy) {
+  copyRunning = busy;
+  ["#copySource", "#copyTarget", "#loadMatches", "#copyCancel", "#copySearch", "#copySelectToggle"].forEach(
+    (s) => ($(s).disabled = busy),
+  );
+  $("#copyRun").disabled = busy;
+  $("#copyList")
+    .querySelectorAll('input[type="checkbox"]')
+    .forEach((box) => {
+      const pair = copyPairs[Number(box.dataset.index)];
+      box.disabled = busy || !pair || pair.identical;
+    });
+  if (!busy) updateCopyRunLabel();
+}
+async function runCopy() {
+  if (copyRunning) return;
+  const rows = copyPairs.filter((p) => p.checked && !p.identical);
+  if (!rows.length) return toast("Select at least one value to copy.");
+  const targetId = $("#copyTarget").value;
+  const targetName =
+    connections.find((c) => c.id === targetId)?.name || "target";
+  setCopyBusy(true);
+  const copied = [],
+    failed = [];
+  for (let i = 0; i < rows.length; i++) {
+    const pair = rows[i];
+    $("#copyRun").textContent = `Copying ${i + 1}/${rows.length}…`;
+    try {
+      await ghl(
+        "PUT",
+        `/locations/:locationId/customValues/${pair.target.id}`,
+        { name: pair.target.name, value: pair.source.value },
+        targetId,
+      );
+      pair.identical = true;
+      pair.target.value = pair.source.value;
+      copied.push(pair);
+    } catch (error) {
+      failed.push({ pair, message: error.message });
+    }
+  }
+  setCopyBusy(false);
+  if (copyStats) {
+    copyStats.differs = copyDifferCount();
+    copyStats.identical = copyStats.matched - copyStats.differs;
+    renderCopySummary();
+  }
+  renderCopyList();
+  const result = $("#copyResult");
+  result.hidden = false;
+  result.classList.toggle("failed", failed.length > 0);
+  result.textContent = failed.length
+    ? `${copied.length} copied · ${failed.length} failed: ${failed
+        .map((f) => f.pair.source.key)
+        .join(", ")} — ${failed[0].message}`
+    : `${copied.length} value${copied.length === 1 ? "" : "s"} copied to ${targetName}.`;
+  if (copied.length && targetId === activeConnection) loadValues();
+  toast(
+    failed.length
+      ? `Copy finished with ${failed.length} failure${failed.length === 1 ? "" : "s"}.`
+      : `Copied ${copied.length} value${copied.length === 1 ? "" : "s"} to ${targetName}.`,
+  );
+}
+
+$("#copyNav").onclick = (e) => {
+  e.preventDefault();
+  openCopyDialog();
+};
+$("#loadMatches").onclick = loadCopyMatches;
+$("#copyRun").onclick = runCopy;
+$("#copySelectToggle").onclick = () => {
+  const select = checkedCopyCount() === 0;
+  copyPairs.forEach((p) => {
+    if (!p.identical) p.checked = select;
+  });
+  renderCopyList();
+};
+$("#copySearch").oninput = renderCopyList;
+$("#copyCancel").onclick = () => {
+  if (!copyRunning) $("#copyDialog").close();
+};
+$("#copySource").onchange = resetCopyResults;
+$("#copyTarget").onchange = resetCopyResults;
+$("#copyDialog").addEventListener("cancel", (e) => {
+  if (copyRunning) e.preventDefault();
+});
+$("#copyDialog").querySelector(".close").addEventListener("click", (e) => {
+  if (copyRunning) e.preventDefault();
+});
 
 syncProfileUI();
 selectValue(selected.id);
